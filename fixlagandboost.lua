@@ -1,6 +1,5 @@
 local VRAMCleaner = {}
 
--- Biến để theo dõi trạng thái
 VRAMCleaner.cleanupCompleted = false
 
 function VRAMCleaner.removeTerrain()
@@ -37,6 +36,54 @@ function VRAMCleaner.removeWater()
     end
     print("✅ Water objects removed: " .. waterCount)
     return waterCount
+end
+
+-- TÍNH NĂNG MỚI: Xóa Decals/Textures
+function VRAMCleaner.removeDecalsAndTextures()
+    local workspace = game:GetService("Workspace")
+    local texturesRemoved = 0
+    
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Decal") or obj:IsA("Texture") then
+            obj:Destroy()
+            texturesRemoved += 1
+        end
+    end
+    
+    print("✅ Decals/Textures removed: " .. texturesRemoved)
+    return texturesRemoved
+end
+
+-- TÍNH NĂNG MỚI: Ẩn Objects xa
+function VRAMCleaner.hideDistantObjects()
+    local workspace = game:GetService("Workspace")
+    local players = game:GetService("Players")
+    local localPlayer = players.LocalPlayer
+    local objectsHidden = 0
+    
+    if not localPlayer or not localPlayer.Character then return 0 end
+    
+    local rootPart = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return 0 end
+    
+    local playerPos = rootPart.Position
+    
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if (obj:IsA("Part") or obj:IsA("MeshPart") or obj:IsA("UnionOperation")) and
+           not obj:IsDescendantOf(localPlayer.Character) then
+            
+            local distance = (obj.Position - playerPos).Magnitude
+            
+            if distance > 100 then  -- Objects xa hơn 100 studs
+                obj.Transparency = 1
+                obj.CanCollide = false
+                objectsHidden += 1
+            end
+        end
+    end
+    
+    print("✅ Distant objects hidden: " .. objectsHidden)
+    return objectsHidden
 end
 
 function VRAMCleaner.removeHeavyEffects()
@@ -117,7 +164,6 @@ function VRAMCleaner.getFPS()
     local frameCount = 0
     local lastCheck = tick()
     
-    -- Đây là cách đơn giản để ước tính FPS
     local connection
     connection = RunService.Heartbeat:Connect(function()
         frameCount = frameCount + 1
@@ -176,14 +222,14 @@ function VRAMCleaner.fullEnvironmentCleanup()
         return
     end
     
-    print("🚀 Starting environment VRAM optimization...")
+    print("🚀 Starting ULTIMATE VRAM optimization...")
     
     -- Tạo backup trước khi cleanup
     VRAMCleaner.createBackup()
     
     local startTime = tick()
     
-    -- Thực hiện cleanup
+    -- Thực hiện cleanup CƠ BẢN (phiên bản cũ)
     VRAMCleaner.removeTerrain()
     VRAMCleaner.removeSkybox()
     VRAMCleaner.removeWater()
@@ -191,11 +237,19 @@ function VRAMCleaner.fullEnvironmentCleanup()
     VRAMCleaner.optimizeLighting()
     VRAMCleaner.reduceGraphicsQuality()
     
+    -- THÊM 2 TÍNH NĂNG MỚI
+    local texturesCount = VRAMCleaner.removeDecalsAndTextures()
+    local hiddenObjectsCount = VRAMCleaner.hideDistantObjects()
+    
     local endTime = tick()
     local duration = endTime - startTime
     
-    print("🎉 " .. string.format("Environment cleanup completed in %.2f seconds", duration))
-    print("📉 VRAM should be significantly reduced!")
+    print("🎉 " .. string.format("ULTIMATE CLEANUP completed in %.2f seconds", duration))
+    print("📊 RESULTS:")
+    print("   - Effects removed: " .. effectsCount)
+    print("   - Textures removed: " .. texturesCount)
+    print("   - Distant objects hidden: " .. hiddenObjectsCount)
+    print("📉 MAXIMUM VRAM REDUCTION ACHIEVED!")
     
     -- Force garbage collection
     wait(1)
@@ -205,12 +259,14 @@ function VRAMCleaner.fullEnvironmentCleanup()
     
     return {
         effectsRemoved = effectsCount,
+        textures = texturesCount,
+        hiddenObjects = hiddenObjectsCount,
         duration = duration,
         success = true
     }
 end
 
--- TÍNH NĂNG MỚI: Cleanup từng phần
+-- TÍNH NĂNG MỚI: Cleanup từng phần (cập nhật thêm 2 tính năng mới)
 function VRAMCleaner.partialCleanup(options)
     local defaultOptions = {
         terrain = true,
@@ -218,7 +274,9 @@ function VRAMCleaner.partialCleanup(options)
         water = true,
         effects = true,
         lighting = true,
-        graphics = true
+        graphics = true,
+        textures = true,      -- MỚI: Xóa Decals/Textures
+        distantObjects = true -- MỚI: Ẩn Objects xa
     }
     
     options = options or defaultOptions
@@ -231,6 +289,8 @@ function VRAMCleaner.partialCleanup(options)
     if options.effects then VRAMCleaner.removeHeavyEffects() end
     if options.lighting then VRAMCleaner.optimizeLighting() end
     if options.graphics then VRAMCleaner.reduceGraphicsQuality() end
+    if options.textures then VRAMCleaner.removeDecalsAndTextures() end
+    if options.distantObjects then VRAMCleaner.hideDistantObjects() end
     
     print("✅ Partial cleanup completed!")
 end
@@ -239,7 +299,7 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 -- Ví dụ sử dụng các tính năng mới:
--- VRAMCleaner.partialCleanup({terrain = true, effects = true}) -- Chỉ xóa terrain và effects
+-- VRAMCleaner.partialCleanup({terrain = true, effects = true, textures = true}) -- Chỉ xóa terrain, effects và textures
 -- VRAMCleaner.restoreFromBackup() -- Khôi phục môi trường
 
 return VRAMCleaner
