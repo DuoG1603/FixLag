@@ -11,25 +11,21 @@ local function isValidKey(key)
     return false
 end
 
--- ❗ Nếu người dùng không nhập gì
 if _G.Key == nil then
     game.Players.LocalPlayer:Kick("⚠️ Kiếm Key mà cho vô bạn ơi!")
     return
 end
 
--- ❗ Nếu họ cố tình xoá _G.Key giữa chừng
 if typeof(_G.Key) ~= "string" then
     game.Players.LocalPlayer:Kick("⚠️ Biến mẹ mày đi!")
     return
 end
 
--- ❗ Nếu key sai
 if not isValidKey(_G.Key) then
     game.Players.LocalPlayer:Kick("⚠️ DM chủ script để lấy key đúng bạn ơi!")
     return
 end
 
--- Nếu tới đây → key hợp lệ
 print("🎉 Key hợp lệ! Đang tải script...")
 
 
@@ -474,3 +470,4 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 return VRAMCleaner
+
