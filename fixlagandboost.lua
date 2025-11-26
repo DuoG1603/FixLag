@@ -86,6 +86,130 @@ function VRAMCleaner.hideDistantObjects()
     return objectsHidden
 end
 
+-- TÍNH NĂNG MỚI: Giảm chất lượng GUI TỐI ĐA (AN TOÀN)
+function VRAMCleaner.reduceGUIQuality()
+    local players = game:GetService("Players")
+    local localPlayer = players.LocalPlayer
+    local guiOptimized = 0
+    
+    if not localPlayer then return 0 end
+    
+    if localPlayer:FindFirstChild("PlayerGui") then
+        for _, gui in pairs(localPlayer.PlayerGui:GetDescendants()) do
+            -- XÓA HOÀN TOÀN hình ảnh trong GUI (tiết kiệm VRAM nhất)
+            if gui:IsA("ImageLabel") and gui.Image ~= "" then
+                gui.Image = ""  -- Xóa hình ảnh hoàn toàn
+                gui.BackgroundTransparency = 1.0  -- Làm trong suốt hoàn toàn
+                guiOptimized += 1
+            end
+            
+            -- Giảm chất lượng Frame tối đa - TRONG SUỐT HOÀN TOÀN
+            if gui:IsA("Frame") or gui:IsA("ScrollingFrame") then
+                gui.BackgroundTransparency = 1.0  -- Trong suốt hoàn toàn
+                gui.BorderSizePixel = 0  -- Xóa viền
+                guiOptimized += 1
+            end
+            
+            -- Giảm chất lượng Text tối đa nhưng vẫn đọc được
+            if gui:IsA("TextLabel") or gui:IsA("TextButton") then
+                gui.TextStrokeTransparency = 1.0  -- Xóa viền chữ hoàn toàn
+                gui.BackgroundTransparency = 1.0  -- Nền trong suốt
+                gui.TextColor3 = Color3.new(1, 1, 1)  -- Chữ trắng đơn giản
+                gui.TextSize = 12  -- Font size nhỏ nhất
+                guiOptimized += 1
+            end
+            
+            -- Xóa tất cả UIStroke effects
+            if gui:IsA("UIStroke") then
+                gui.Enabled = false
+                guiOptimized += 1
+            end
+            
+            -- Xóa tất cả UIGradient effects
+            if gui:IsA("UIGradient") then
+                gui.Enabled = false
+                guiOptimized += 1
+            end
+        end
+    end
+    
+    print("✅ GUI quality reduced to MINIMUM: " .. guiOptimized)
+    return guiOptimized
+end
+
+-- TÍNH NĂNG MỚI: Giảm chất lượng hình ảnh vật thể TỐI ĐA
+function VRAMCleaner.reduceObjectQuality()
+    local workspace = game:GetService("Workspace")
+    local objectsOptimized = 0
+    
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Part") or obj:IsA("MeshPart") then
+            -- Đổi TẤT CẢ materials thành Plastic (nhẹ nhất)
+            obj.Material = Enum.Material.Plastic
+            objectsOptimized += 1
+            
+            -- Xóa reflectivity hoàn toàn
+            obj.Reflectance = 0
+            objectsOptimized += 1
+            
+            -- Đổi màu thành xám đơn giản cho TẤT CẢ objects
+            obj.Color = Color3.new(0.6, 0.6, 0.6)
+            objectsOptimized += 1
+            
+            -- Tắt cast shadow hoàn toàn
+            obj.CastShadow = false
+            objectsOptimized += 1
+        end
+        
+        -- Xóa texture từ SpecialMesh hoàn toàn
+        if obj:IsA("SpecialMesh") then
+            obj.TextureId = ""  -- Xóa texture
+            objectsOptimized += 1
+        end
+        
+        -- Xóa SurfaceAppearance (Roblox's new material system)
+        if obj:IsA("SurfaceAppearance") then
+            obj:Destroy()
+            objectsOptimized += 1
+        end
+        
+        -- Xóa tất cả PointLight, SpotLight, SurfaceLight
+        if obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then
+            obj.Enabled = false
+            objectsOptimized += 1
+        end
+    end
+    
+    print("✅ Object quality reduced to MINIMUM: " .. objectsOptimized)
+    return objectsOptimized
+end
+
+-- TÍNH NĂNG MỚI: Xóa AMBIENT SOUNDS & BACKGROUND MUSIC
+function VRAMCleaner.removeAmbientSounds()
+    local soundService = game:GetService("SoundService")
+    local workspace = game:GetService("Workspace")
+    local soundsRemoved = 0
+    
+    -- Xóa tất cả sounds trong SoundService
+    for _, sound in pairs(soundService:GetDescendants()) do
+        if sound:IsA("Sound") then
+            sound:Destroy()
+            soundsRemoved += 1
+        end
+    end
+    
+    -- Xóa tất cả sounds trong workspace
+    for _, sound in pairs(workspace:GetDescendants()) do
+        if sound:IsA("Sound") then
+            sound:Destroy()
+            soundsRemoved += 1
+        end
+    end
+    
+    print("✅ All sounds removed: " .. soundsRemoved)
+    return soundsRemoved
+end
+
 function VRAMCleaner.removeHeavyEffects()
     local lighting = game:GetService("Lighting")
     local workspace = game:GetService("Workspace")
@@ -128,12 +252,13 @@ function VRAMCleaner.optimizeLighting()
     
     lighting.GlobalShadows = false
     lighting.FogEnd = 0
-    lighting.Brightness = 2
+    lighting.Brightness = 1.0  -- Giảm độ sáng tối đa
     lighting.EnvironmentDiffuseScale = 0
     lighting.EnvironmentSpecularScale = 0
-    lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+    lighting.OutdoorAmbient = Color3.new(0.2, 0.2, 0.2)  -- Màu tối nhất
+    lighting.Ambient = Color3.new(0.2, 0.2, 0.2)  -- Màu ambient tối nhất
     
-    print("✅ Lighting optimized")
+    print("✅ Lighting optimized to MINIMUM")
     return true
 end
 
@@ -237,9 +362,12 @@ function VRAMCleaner.fullEnvironmentCleanup()
     VRAMCleaner.optimizeLighting()
     VRAMCleaner.reduceGraphicsQuality()
     
-    -- THÊM 2 TÍNH NĂNG MỚI
+    -- THÊM TÍNH NĂNG MỚI
     local texturesCount = VRAMCleaner.removeDecalsAndTextures()
     local hiddenObjectsCount = VRAMCleaner.hideDistantObjects()
+    local guiQualityCount = VRAMCleaner.reduceGUIQuality()      -- MỚI: Giảm chất lượng GUI TỐI ĐA
+    local objectQualityCount = VRAMCleaner.reduceObjectQuality() -- MỚI: Giảm chất lượng vật thể TỐI ĐA
+    local ambientSoundsCount = VRAMCleaner.removeAmbientSounds() -- MỚI: Xóa ambient sounds
     
     local endTime = tick()
     local duration = endTime - startTime
@@ -249,7 +377,10 @@ function VRAMCleaner.fullEnvironmentCleanup()
     print("📉- Effects removed: " .. effectsCount)
     print("📉- Textures removed: " .. texturesCount)
     print("📉- Distant objects hidden: " .. hiddenObjectsCount)
-    print("⚠️ MAXIMUM VRAM REDUCTION ACHIEVED!")
+    print("🎨- GUI quality reduced: " .. guiQualityCount)
+    print("🔧- Object quality reduced: " .. objectQualityCount)
+    print("🔊- Ambient sounds removed: " .. ambientSoundsCount)
+    print("🎮 FARMING SAFE - MAXIMUM VRAM REDUCTION!")
     
     -- Force garbage collection
     wait(1)
@@ -261,12 +392,15 @@ function VRAMCleaner.fullEnvironmentCleanup()
         effectsRemoved = effectsCount,
         textures = texturesCount,
         hiddenObjects = hiddenObjectsCount,
+        guiQuality = guiQualityCount,
+        objectQuality = objectQualityCount,
+        ambientSounds = ambientSoundsCount,
         duration = duration,
         success = true
     }
 end
 
--- TÍNH NĂNG MỚI: Cleanup từng phần (cập nhật thêm 2 tính năng mới)
+-- TÍNH NĂNG MỚI: Cleanup từng phần (cập nhật thêm tính năng mới)
 function VRAMCleaner.partialCleanup(options)
     local defaultOptions = {
         terrain = true,
@@ -275,8 +409,11 @@ function VRAMCleaner.partialCleanup(options)
         effects = true,
         lighting = true,
         graphics = true,
-        textures = true,      -- MỚI: Xóa Decals/Textures
-        distantObjects = true -- MỚI: Ẩn Objects xa
+        textures = true,           -- Xóa Decals/Textures
+        distantObjects = true,     -- Ẩn Objects xa
+        guiQuality = true,         -- MỚI: Giảm chất lượng GUI
+        objectQuality = true,      -- MỚI: Giảm chất lượng vật thể
+        ambientSounds = true       -- MỚI: Xóa ambient sounds
     }
     
     options = options or defaultOptions
@@ -291,15 +428,14 @@ function VRAMCleaner.partialCleanup(options)
     if options.graphics then VRAMCleaner.reduceGraphicsQuality() end
     if options.textures then VRAMCleaner.removeDecalsAndTextures() end
     if options.distantObjects then VRAMCleaner.hideDistantObjects() end
+    if options.guiQuality then VRAMCleaner.reduceGUIQuality() end
+    if options.objectQuality then VRAMCleaner.reduceObjectQuality() end
+    if options.ambientSounds then VRAMCleaner.removeAmbientSounds() end
     
     print("✅ Partial cleanup completed!")
 end
 
 -- Chạy cleanup toàn bộ môi trường
 VRAMCleaner.fullEnvironmentCleanup()
-
--- Ví dụ sử dụng các tính năng mới:
--- VRAMCleaner.partialCleanup({terrain = true, effects = true, textures = true}) -- Chỉ xóa terrain, effects và textures
--- VRAMCleaner.restoreFromBackup() -- Khôi phục môi trường
 
 return VRAMCleaner
