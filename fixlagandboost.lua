@@ -1,9 +1,37 @@
-local Key = "DUOG1603VIP"
+local ValidKeys = {
+    "DUOG1603"
+}
 
-if not _G.Key or _G.Key ~= Key then
-    game.Players.LocalPlayer:Kick("Sai key! Lấy key ở Discord.")
+local function isValidKey(key)
+    for _, v in ipairs(ValidKeys) do
+        if key == v then
+            return true
+        end
+    end
+    return false
+end
+
+-- ❗ Nếu người dùng không nhập gì
+if _G.Key == nil then
+    game.Players.LocalPlayer:Kick("⚠️ Kiếm Key mà nhập vô bạn ơi!")
     return
 end
+
+-- ❗ Nếu họ cố tình xoá _G.Key giữa chừng
+if typeof(_G.Key) ~= "string" then
+    game.Players.LocalPlayer:Kick("⚠️ Biến mẹ mày đi!")
+    return
+end
+
+-- ❗ Nếu key sai
+if not isValidKey(_G.Key) then
+    game.Players.LocalPlayer:Kick("⚠️ DM chủ script để lấy key bạn ơi!")
+    return
+end
+
+-- Nếu tới đây → key hợp lệ
+print("🎉 Key hợp lệ! Đang tải script...")
+
 
 local VRAMCleaner = {}
 
@@ -446,6 +474,7 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 return VRAMCleaner
+
 
 
 
