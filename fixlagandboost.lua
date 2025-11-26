@@ -1,10 +1,15 @@
-local VRAMCleaner = {}
-local key = "DUOGKEYVIP1603"  -- 🔑 ĐỔI KEY TẠI ĐÂY !!
+-- KEY SYSTEM ĐƠN GIẢN
+local CorrectKey = "DUOGVIP1603"  -- Key bạn tự đặt
 
-if _G.Key ~= key then
-    game.Players.LocalPlayer:Kick("Sai KEY! Lấy key tại Discord của DuoG.")
+if _G.Key ~= CorrectKey then
+    game.Players.LocalPlayer:Kick("Sai Key! Hãy nhập key trước khi chạy script.")
     return
 end
+
+-- Nếu đúng key thì script chạy tiếp
+print("Đúng key, chạy script...")
+
+local VRAMCleaner = {}
 
 VRAMCleaner.cleanupCompleted = false
 
@@ -445,4 +450,5 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 return VRAMCleaner
+
 
