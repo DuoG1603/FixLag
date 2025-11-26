@@ -26,7 +26,7 @@ if not isValidKey(_G.Key) then
     return
 end
 
-print("🎉 Key hợp lệ! Đang tải script...")
+print("🎉 Key hợp lệ! Đang load script Fix Lag...")
 
 
 local VRAMCleaner = {}
@@ -470,4 +470,5 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 return VRAMCleaner
+
 
