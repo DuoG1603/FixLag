@@ -1,8 +1,8 @@
 -- KEY SYSTEM ĐƠN GIẢN
-local CorrectKey = "DUOGVIP1603"  -- Key bạn tự đặt
+local Key = "DUOG1603VIP"
 
-if _G.Key ~= CorrectKey then
-    game.Players.LocalPlayer:Kick("Sai Key! Hãy nhập key trước khi chạy script.")
+if not _G.Key or _G.Key ~= Key then
+    game.Players.LocalPlayer:Kick("Sai key! DM Chủ Script để lấy key!")
     return
 end
 
@@ -450,5 +450,6 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 return VRAMCleaner
+
 
 
