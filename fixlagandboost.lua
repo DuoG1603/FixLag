@@ -246,10 +246,10 @@ function VRAMCleaner.fullEnvironmentCleanup()
     
     print("🎉 " .. string.format("ULTIMATE CLEANUP completed in %.2f seconds", duration))
     print("📊 RESULTS:")
-    print("   - Effects removed: " .. effectsCount)
-    print("   - Textures removed: " .. texturesCount)
-    print("   - Distant objects hidden: " .. hiddenObjectsCount)
-    print("📉 MAXIMUM VRAM REDUCTION ACHIEVED!")
+    print("📉- Effects removed: " .. effectsCount)
+    print("📉- Textures removed: " .. texturesCount)
+    print("📉- Distant objects hidden: " .. hiddenObjectsCount)
+    print("⚠️ MAXIMUM VRAM REDUCTION ACHIEVED!")
     
     -- Force garbage collection
     wait(1)
