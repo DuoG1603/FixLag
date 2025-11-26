@@ -1,5 +1,6 @@
 local ValidKeys = {
-    "DUOG1603"
+    "DUOG1603",
+    "concu"
 }
 
 local function isValidKey(key)
@@ -470,5 +471,6 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 return VRAMCleaner
+
 
 
