@@ -1,4 +1,10 @@
 local VRAMCleaner = {}
+local key = "DUOGKEYVIP1603"  -- 🔑 ĐỔI KEY TẠI ĐÂY !!
+
+if _G.Key ~= key then
+    game.Players.LocalPlayer:Kick("Sai KEY! Lấy key tại Discord của DuoG.")
+    return
+end
 
 VRAMCleaner.cleanupCompleted = false
 
@@ -439,3 +445,4 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 return VRAMCleaner
+
