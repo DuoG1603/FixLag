@@ -474,10 +474,3 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 return VRAMCleaner
-
-
-
-
-
-
-
