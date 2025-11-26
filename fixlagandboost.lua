@@ -13,7 +13,7 @@ end
 
 -- ❗ Nếu người dùng không nhập gì
 if _G.Key == nil then
-    game.Players.LocalPlayer:Kick("⚠️ Kiếm Key mà nhập vô bạn ơi!")
+    game.Players.LocalPlayer:Kick("⚠️ Kiếm Key mà cho vô bạn ơi!")
     return
 end
 
@@ -25,7 +25,7 @@ end
 
 -- ❗ Nếu key sai
 if not isValidKey(_G.Key) then
-    game.Players.LocalPlayer:Kick("⚠️ DM chủ script để lấy key bạn ơi!")
+    game.Players.LocalPlayer:Kick("⚠️ DM chủ script để lấy key đúng bạn ơi!")
     return
 end
 
@@ -474,6 +474,7 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 return VRAMCleaner
+
 
 
 
