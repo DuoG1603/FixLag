@@ -1,13 +1,9 @@
--- KEY SYSTEM ĐƠN GIẢN
 local Key = "DUOG1603VIP"
 
 if not _G.Key or _G.Key ~= Key then
-    game.Players.LocalPlayer:Kick("Sai key! DM Chủ Script để lấy key!")
+    game.Players.LocalPlayer:Kick("Sai key! Lấy key ở Discord.")
     return
 end
-
--- Nếu đúng key thì script chạy tiếp
-print("Đúng key, chạy script...")
 
 local VRAMCleaner = {}
 
@@ -450,6 +446,7 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 return VRAMCleaner
+
 
 
 
