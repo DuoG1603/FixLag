@@ -1,11 +1,12 @@
 {
     "DUOG1603": {
-        "hwid": "NONE"
+        "hwid": "HWID"
     },
     "VIP123": {
         "hwid": "NONE"
     },
     "concu": {
-        "hwid": "NONE"
+        "hwid": "HWID"
     }
 }
+
