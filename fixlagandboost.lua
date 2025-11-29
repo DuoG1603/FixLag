@@ -317,14 +317,7 @@ end
 -- Hàm khởi chạy VRAM Cleaner sau khi key hợp lệ
 function startVRAMCleaner()
     print("🔑 Key hợp lệ! Đang khởi chạy VRAM Cleaner...")
-    wait(1)
-
--- Hàm khởi chạy VRAM Cleaner sau khi key hợp lệ
-function startVRAMCleaner()
-    print("🔑 Key hợp lệ! Đang khởi chạy VRAM Cleaner...")
-    wait(1)
     
-    -- CODE VRAM CLEANER CỦA BẠN Ở DƯỚI ĐÂY
     local VRAMCleaner = {}
 
     VRAMCleaner.cleanupCompleted = false
@@ -1013,88 +1006,6 @@ function startVRAMCleaner()
         }
     end
 
-    -- TÍNH NĂNG MỚI: Cleanup từng phần
-    function VRAMCleaner.partialCleanup(options)
-        local defaultOptions = {
-            terrain = true,
-            skybox = true,
-            water = true,
-            effects = true,
-            lighting = true,
-            graphics = true,
-            textures = true,
-            distantObjects = true,
-            guiQuality = true,
-            objectQuality = true,
-            ambientSounds = true,
-            ground = true,
-            baseplates = true,
-            blurTextures = true,
-            blurItems = true,
-            autoItemClean = true
-        }
-        
-        options = options or defaultOptions
-        
-        print("🔧 Starting partial cleanup...")
-        
-        -- Bật auto item cleanup nếu được yêu cầu
-        if options.autoItemClean then
-            VRAMCleaner.setupItemAutoClean()
-        end
-        
-        if options.terrain then VRAMCleaner.removeTerrain() end
-        if options.skybox then VRAMCleaner.removeSkybox() end
-        if options.water then VRAMCleaner.removeWater() end
-        if options.effects then VRAMCleaner.removeHeavyEffects() end
-        if options.lighting then VRAMCleaner.optimizeLighting() end
-        if options.graphics then VRAMCleaner.reduceGraphicsQuality() end
-        if options.textures then VRAMCleaner.removeDecalsAndTextures() end
-        if options.distantObjects then VRAMCleaner.hideDistantObjects() end
-        if options.guiQuality then VRAMCleaner.reduceGUIQuality() end
-        if options.objectQuality then VRAMCleaner.reduceObjectQuality() end
-        if options.ambientSounds then VRAMCleaner.removeAmbientSounds() end
-        if options.ground then VRAMCleaner.removeGround() end
-        if options.baseplates then VRAMCleaner.removeAllBaseplates() end
-        if options.blurTextures then VRAMCleaner.blurAllTextures() end
-        if options.blurItems then VRAMCleaner.maximizeItemBlur() end
-        
-        print("✅ Partial cleanup completed!")
-    end
-
-    -- TÍNH NĂNG MỚI: Bật auto-cleanup khi respawn
-    function VRAMCleaner.enableRespawnCleanup()
-        VRAMCleaner.setupRespawnAutoClean()
-        print("✅ Full respawn cleanup ENABLED - Will run complete cleanup on every respawn")
-    end
-
-    -- TÍNH NĂNG MỚI: Tắt auto-cleanup khi respawn
-    function VRAMCleaner.disableRespawnCleanup()
-        if VRAMCleaner.respawnConnection then
-            VRAMCleaner.respawnConnection:Disconnect()
-            VRAMCleaner.respawnConnection = nil
-            print("🛑 Respawn cleanup DISABLED")
-        else
-            print("ℹ️ No active respawn cleanup to disable")
-        end
-    end
-
-    -- TÍNH NĂNG MỚI: Bật/tắt auto item cleanup
-    function VRAMCleaner.enableItemAutoClean()
-        VRAMCleaner.setupItemAutoClean()
-        print("✅ Auto item cleanup ENABLED - Will blur new items automatically")
-    end
-
-    function VRAMCleaner.disableItemAutoClean()
-        if VRAMCleaner.itemCleanupConnection then
-            VRAMCleaner.itemCleanupConnection:Disconnect()
-            VRAMCleaner.itemCleanupConnection = nil
-            print("🛑 Auto item cleanup DISABLED")
-        else
-            print("ℹ️ No active item cleanup to disable")
-        end
-    end
-
     -- Chạy cleanup toàn bộ môi trường lần đầu
     VRAMCleaner.fullEnvironmentCleanup()
 
@@ -1102,9 +1013,11 @@ function startVRAMCleaner()
     VRAMCleaner.enableRespawnCleanup()
     VRAMCleaner.enableItemAutoClean()
 
+    print("🎉 VRAM Cleaner đã được khởi chạy thành công!")
     return VRAMCleaner
 end
 
+-- Khởi chạy key system khi script bắt đầu
 wait(1)
 key_system:show_menu()
 
