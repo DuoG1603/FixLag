@@ -1,7 +1,7 @@
 --== CONFIG ==--
 local rawFileURL = "https://raw.githubusercontent.com/DuoG1603/FixLag/refs/heads/main/key.json"
 local githubAPI = "https://api.github.com/repos/DuoG1603/FixLag/contents/key.json"
-local githubToken = "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"
+local githubToken = "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"
 local discordWebhook = "https://discord.com/api/webhooks/1374025784611836074/kkmdFGWAggdZ_AYBmAA5KQKYiQGsnMhzbuT59Z-Oo3JjIIk-P7pmb6ZPwBUie5sP-9_U"
 
 --== LẤY HWID (PC/DEVICE) ==--
@@ -27,8 +27,60 @@ end)
 
 --== TẢI KEY LIST ==--
 local HttpService = game:GetService("HttpService")
+local keyData = nil
+local sha = nil
 
-local keyData = HttpService:JSONDecode(game:HttpGet(rawFileURL))
+-- Hàm lấy key data từ GitHub API với fallback
+local function loadKeyData()
+    -- Thử GitHub API trước
+    local success, result = pcall(function()
+        local response = game:HttpGet({
+            Url = githubAPI,
+            Headers = {
+                ["Authorization"] = "token " .. githubToken,
+                ["User-Agent"] = "RobloxScript"
+            }
+        })
+        
+        local apiData = HttpService:JSONDecode(response)
+        
+        if apiData and apiData.content then
+            sha = apiData.sha -- Lưu SHA để update sau
+            local decodedContent = HttpService:Base64Decode(apiData.content)
+            return HttpService:JSONDecode(decodedContent)
+        else
+            error("No content in API response")
+        end
+    end)
+    
+    if success then
+        print("✅ Loaded key data from GitHub API")
+        return result
+    end
+    
+    -- Fallback: Thử Raw URL
+    print("⚠️ GitHub API failed, trying Raw URL...")
+    local rawSuccess, rawResult = pcall(function()
+        local response = game:HttpGet(rawFileURL)
+        return HttpService:JSONDecode(response)
+    end)
+    
+    if rawSuccess then
+        print("✅ Loaded key data from Raw URL")
+        return rawResult
+    else
+        error("All methods failed: " .. tostring(rawResult))
+    end
+end
+
+-- Load key data
+local loadSuccess, loadResult = pcall(loadKeyData)
+if not loadSuccess then
+    game.Players.LocalPlayer:Kick("Lỗi tải key list: " .. tostring(loadResult))
+    return
+end
+
+keyData = loadResult
 
 --== KIỂM TRA KEY ==--
 local keyInfo = keyData[userKey]
@@ -59,23 +111,38 @@ if not contains(hwids, hwid) then
     table.insert(hwids, hwid)
 
     --== UPLOAD KEY.JSON LÊN GITHUB ==--
-    local newContent = HttpService:Base64Encode(HttpService:JSONEncode(keyData))
+    local updateSuccess, updateError = pcall(function()
+        local newContent = HttpService:Base64Encode(HttpService:JSONEncode(keyData))
+        
+        local payload = HttpService:JSONEncode({
+            message = "Auto-update HWID for key "..userKey,
+            content = newContent,
+            sha = sha
+        })
 
-    local payload = HttpService:JSONEncode({
-        message = "Auto-update HWID for key "..userKey,
-        content = newContent,
-        sha = game:HttpGet(githubAPI).sha
-    })
-
-    syn.request({
-        Url = githubAPI,
-        Method = "PUT",
-        Headers = {
-            ["Authorization"] = "token " .. githubToken,
-            ["Content-Type"] = "application/json"
-        },
-        Body = payload
-    })
+        local response = syn.request({
+            Url = githubAPI,
+            Method = "PUT",
+            Headers = {
+                ["Authorization"] = "token " .. githubToken,
+                ["Content-Type"] = "application/json",
+                ["User-Agent"] = "RobloxScript"
+            },
+            Body = payload
+        })
+        
+        if response.Success and response.StatusCode == 200 then
+            print("✅ Successfully updated HWID on GitHub")
+            return true
+        else
+            error("HTTP " .. tostring(response.StatusCode) .. ": " .. tostring(response.Body))
+        end
+    end)
+    
+    if not updateSuccess then
+        print("⚠️ Failed to update GitHub: " .. tostring(updateError))
+        print("📝 HWID added locally only")
+    end
 end
 
 --== GỬI LOG DISCORD ==--
@@ -101,6 +168,7 @@ pcall(function()
 end)
 
 print("KEY OK — LOAD SCRIPT!")
+
 
 local VRAMCleaner = {}
 
