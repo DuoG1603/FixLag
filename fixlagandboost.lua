@@ -4,30 +4,34 @@ local key_system = {}
 key_system.keys_url = "https://raw.githubusercontent.com/DuoG1603/FixLag/refs/heads/main/key.json" -- THAY URL GITHUB CỦA BẠN
 key_system.discord_webhook = "https://discord.com/api/webhooks/1374025784611836074/kkmdFGWAggdZ_AYBmAA5KQKYiQGsnMhzbuT59Z-Oo3JjIIk-P7pmb6ZPwBUie5sP-9_U" -- THAY WEBHOOK DISCORD CỦA BẠN
 
--- Hàm lấy HWID đơn giản
+-- Biến toàn cục để lưu key (giống như yêu cầu)
+_G.Key = ""
+
+-- Hàm lấy HWID đơn giản cho Roblox
 function key_system:get_hwid()
-    if package.config:sub(1,1) == "\\" then -- Windows
-        local handle = io.popen("wmic csproduct get uuid 2>nul")
-        local result = handle:read("*a")
-        handle:close()
-        if result and result ~= "" then
-            return result:match("%S+"):gsub("%s+", "")
-        end
-    else -- Linux/Mac
-        local handle = io.popen("sudo dmidecode -s system-uuid 2>/dev/null || cat /etc/machine-id 2>/dev/null || hostname", "r")
-        local result = handle:read("*a")
-        handle:close()
-        return result:gsub("%s+", "")
-    end
-    return "unknown_hwid_" .. os.time()
+    local players = game:GetService("Players")
+    local localPlayer = players.LocalPlayer
+    
+    -- Sử dụng UserId và các thông tin duy nhất của player
+    local hwid = tostring(localPlayer.UserId) .. "_" .. tostring(game.JobId)
+    
+    -- Thêm thông tin về place/game
+    hwid = hwid .. "_" .. tostring(game.PlaceId)
+    
+    return hwid
 end
 
--- Hàm lấy tên PC
+-- Hàm lấy tên PC (sửa lỗi io.popen)
 function key_system:get_pc_name()
-    local handle = io.popen("hostname")
-    local name = handle:read("*a"):gsub("%s+", "")
-    handle:close()
-    return name
+    local players = game:GetService("Players")
+    local localPlayer = players.LocalPlayer
+    
+    -- Sử dụng DisplayName hoặc Name của player
+    if localPlayer then
+        return localPlayer.DisplayName or localPlayer.Name or "UnknownPlayer"
+    end
+    
+    return "UnknownPlayer"
 end
 
 -- Hàm gửi log đến Discord
@@ -41,7 +45,7 @@ function key_system:send_to_discord(key, status, pc_name, hwid)
                 color = status == "SUCCESS" and 65280 or 16711680,
                 fields = {
                     {
-                        name = "PC Name",
+                        name = "Player Name",
                         value = "```" .. pc_name .. "```",
                         inline = true
                     },
@@ -64,6 +68,11 @@ function key_system:send_to_discord(key, status, pc_name, hwid)
                         name = "Time",
                         value = "```" .. time .. "```",
                         inline = true
+                    },
+                    {
+                        name = "Game",
+                        value = "```" .. game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name .. "```",
+                        inline = true
                     }
                 },
                 footer = {
@@ -74,10 +83,9 @@ function key_system:send_to_discord(key, status, pc_name, hwid)
     }
     
     -- Gửi request đến Discord webhook
-    local command = string.format('curl -s -X POST -H "Content-Type: application/json" -d \'%s\' "%s"', 
-        game:GetService("HttpService"):JSONEncode(payload), self.discord_webhook)
     pcall(function()
-        game:GetService("HttpService"):PostAsync(self.discord_webhook, game:GetService("HttpService"):JSONEncode(payload))
+        local httpService = game:GetService("HttpService")
+        httpService:PostAsync(self.discord_webhook, httpService:JSONEncode(payload))
     end)
 end
 
@@ -108,6 +116,11 @@ function key_system:check_key(input_key)
     -- Tìm key trong danh sách
     for _, key_info in ipairs(keys_data.keys or {}) do
         if key_info.key == input_key then
+            if not key_info.is_active then
+                self:send_to_discord(input_key, "KEY_DEACTIVATED", pc_name, hwid)
+                return false, "Key đã bị vô hiệu hóa!"
+            end
+            
             -- Check HWID limit
             local current_hwids = key_info.registered_hwids or {}
             local is_registered = false
@@ -122,6 +135,7 @@ function key_system:check_key(input_key)
             if is_registered then
                 -- HWID đã đăng ký
                 self:send_to_discord(input_key, "SUCCESS", pc_name, hwid)
+                _G.Key = input_key -- Lưu key vào biến toàn cục
                 return true, "Key hợp lệ!"
             else
                 -- Check số lượng HWID
@@ -129,8 +143,9 @@ function key_system:check_key(input_key)
                     self:send_to_discord(input_key, "HWID_LIMIT_EXCEEDED", pc_name, hwid)
                     return false, "Key đã đạt giới hạn số lượng thiết bị!"
                 else
-                    -- Thêm HWID mới (cần cập nhật file JSON)
+                    -- Thêm HWID mới
                     self:send_to_discord(input_key, "NEW_DEVICE_REGISTERED", pc_name, hwid)
+                    _G.Key = input_key -- Lưu key vào biến toàn cục
                     return true, "Key hợp lệ! Thiết bị mới đã được đăng ký."
                 end
             end
@@ -142,10 +157,35 @@ function key_system:check_key(input_key)
     return false, "Key không hợp lệ!"
 end
 
+-- Hàm tự động điền key từ biến toàn cục
+function key_system:auto_fill_key()
+    -- Kiểm tra nếu đã có key trong _G.Key
+    if _G.Key and _G.Key ~= "" then
+        print("🔑 Đang kiểm tra key tự động: " .. _G.Key)
+        local success, message = self:check_key(_G.Key)
+        if success then
+            print("✅ " .. message)
+            return true
+        else
+            print("❌ " .. message)
+            return false
+        end
+    end
+    return false
+end
+
 -- Hàm hiển thị menu key system
 function key_system:show_menu()
+    -- Thử tự động điền key trước
+    if self:auto_fill_key() then
+        print("🎉 Key tự động hợp lệ! Đang khởi chạy VRAM Cleaner...")
+        wait(2)
+        startVRAMCleaner()
+        return
+    end
+    
     print("=== 🔑 KEY SYSTEM ===")
-    print("Nhập key của bạn: ")
+    print("Không tìm thấy key tự động, vui lòng nhập key thủ công...")
     
     -- Tạo GUI cho key system
     local Players = game:GetService("Players")
@@ -220,6 +260,24 @@ function key_system:show_menu()
     closeButton.Font = Enum.Font.GothamBold
     closeButton.Parent = mainFrame
     
+    -- Auto fill button (nếu có key trong _G.Key)
+    local autoFillButton = Instance.new("TextButton")
+    autoFillButton.Size = UDim2.new(0.6, 0, 0, 30)
+    autoFillButton.Position = UDim2.new(0.2, 0, 0.85, 0)
+    autoFillButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+    autoFillButton.Text = "AUTO FILL KEY"
+    autoFillButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    autoFillButton.TextSize = 12
+    autoFillButton.Font = Enum.Font.Gotham
+    autoFillButton.Visible = false
+    autoFillButton.Parent = mainFrame
+    
+    -- Hiển thị nút auto fill nếu có key
+    if _G.Key and _G.Key ~= "" then
+        autoFillButton.Visible = true
+        inputBox.Text = _G.Key
+    end
+    
     -- Button click events
     submitButton.MouseButton1Click:Connect(function()
         local key = inputBox.Text
@@ -242,11 +300,24 @@ function key_system:show_menu()
         end
     end)
     
+    autoFillButton.MouseButton1Click:Connect(function()
+        if _G.Key and _G.Key ~= "" then
+            inputBox.Text = _G.Key
+            resultLabel.Text = "🔑 Đã điền key tự động!"
+            resultLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+        end
+    end)
+    
     closeButton.MouseButton1Click:Connect(function()
         screenGui:Destroy()
         print("Key system đã đóng")
     end)
 end
+
+-- Hàm khởi chạy VRAM Cleaner sau khi key hợp lệ
+function startVRAMCleaner()
+    print("🔑 Key hợp lệ! Đang khởi chạy VRAM Cleaner...")
+    wait(1)
 
 -- Hàm khởi chạy VRAM Cleaner sau khi key hợp lệ
 function startVRAMCleaner()
@@ -1034,7 +1105,6 @@ function startVRAMCleaner()
     return VRAMCleaner
 end
 
--- Khởi chạy key system khi script bắt đầu
 wait(1)
 key_system:show_menu()
 
