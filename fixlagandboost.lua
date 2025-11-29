@@ -1,7 +1,7 @@
 --== CONFIG ==--
 local rawFileURL = "https://raw.githubusercontent.com/DuoG1603/FixLag/refs/heads/main/key.json"
 local githubAPI = "https://api.github.com/repos/DuoG1603/FixLag/contents/key.json"
-local githubToken = "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"
+local githubToken = "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"
 local discordWebhook = "https://discord.com/api/webhooks/1374025784611836074/kkmdFGWAggdZ_AYBmAA5KQKYiQGsnMhzbuT59Z-Oo3JjIIk-P7pmb6ZPwBUie5sP-9_U"
 
 --== LẤY HWID (PC/DEVICE) ==--
