@@ -1,13 +1,10 @@
 {
     "DUOG1603": {
-        "hwid": "NONE"
-    },
-    "VIP123": {
-        "hwid": "NONE"
+        "limit": 25,
+        "hwids": []
     },
     "concu": {
-        "hwid": "NONE"
+        "limit": 1,
+        "hwids": []
     }
 }
-
-
