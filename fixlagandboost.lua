@@ -1,57 +1,106 @@
--- Người dùng nhập key ở đây
-local UserKey = _G.Key or ""
+--== CONFIG ==--
+local rawFileURL = "https://raw.githubusercontent.com/DuoG1603/FixLag/refs/heads/main/key.json"
+local githubAPI = "https://api.github.com/repos/DuoG1603/FixLag/contents/key.json"
+local githubToken = "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"
+local discordWebhook = "https://discord.com/api/webhooks/1374025784611836074/kkmdFGWAggdZ_AYBmAA5KQKYiQGsnMhzbuT59Z-Oo3JjIIk-P7pmb6ZPwBUie5sP-9_U"
 
--- Lấy HWID của executor (hầu hết hỗ trợ gethwid hoặc identifyexecutor)
+--== LẤY HWID (PC/DEVICE) ==--
 local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
 
--- Link GitHub raw
-local url = "https://raw.githubusercontent.com/DuoG1603/FixLag/refs/heads/main/key.json"
-
--- Tải danh sách key
-local data = game:HttpGet(url)
-local keys = game:GetService("HttpService"):JSONDecode(data)
-
--- Kiểm tra key có tồn tại không
-if not keys[UserKey] then
-    game.Players.LocalPlayer:Kick("❌ Key không tồn tại!")
-    return
-end
-
+--== NHẬP KEY ==--
 if not _G.Key then
-    game.Players.LocalPlayer:Kick("❌ Bạn chưa nhập key!")
+    game.Players.LocalPlayer:Kick("Bạn chưa nhập key!")
     return
 end
 
--- Nếu họ cố đổi hoặc xoá _G.Key
-local originalKey = _G.Key
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        if _G.Key ~= originalKey then
-            game.Players.LocalPlayer:Kick("❌ Phát hiện sửa/xoá Key!")
+local userKey = _G.Key
+
+--== CHỐNG XOÁ KEY ==--
+spawn(function()
+    while task.wait(0.3) do
+        if _G.Key ~= userKey then
+            game.Players.LocalPlayer:Kick("Bạn đã chỉnh sửa/xoá key! Không hợp lệ.")
             return
         end
     end
 end)
 
--- Kiểm tra nếu key chưa được sử dụng
-if keys[UserKey].hwid == "NONE" then
-    -- Cấp quyền sử dụng key cho HWID đầu tiên
-    keys[UserKey].hwid = hwid
-    -- Gửi lên webhook để bạn ghi lại (vì GitHub không cho viết file)
-    -- Hoặc bạn phải cập nhật file json thủ công.
-else
-    -- Key đã được xài → kiểm tra xem đúng HWID không
-    if keys[UserKey].hwid ~= hwid then
-        game.Players.LocalPlayer:Kick("❌ Key đã được sử dụng bởi người khác!")
-        return
-    end
+--== TẢI KEY LIST ==--
+local HttpService = game:GetService("HttpService")
+
+local keyData = HttpService:JSONDecode(game:HttpGet(rawFileURL))
+
+--== KIỂM TRA KEY ==--
+local keyInfo = keyData[userKey]
+
+if not keyInfo then
+    game.Players.LocalPlayer:Kick("Key không tồn tại.")
+    return
 end
 
--- Nếu qua hết kiểm tra → ok
-print("✔ Key hợp lệ!")
+--== KIỂM TRA HWID ==--
+local hwids = keyInfo.hwids
+local limit = keyInfo.limit
 
+local function contains(tbl, val)
+    for _, v in ipairs(tbl) do
+        if v == val then return true end
+    end
+    return false
+end
 
+if not contains(hwids, hwid) then
+    -- CHƯA CÓ HWID => THÊM MỚI
+    if #hwids >= limit then
+        game.Players.LocalPlayer:Kick("Key đã vượt quá giới hạn thiết bị ("..limit..")")
+        return
+    end
+
+    table.insert(hwids, hwid)
+
+    --== UPLOAD KEY.JSON LÊN GITHUB ==--
+    local newContent = HttpService:Base64Encode(HttpService:JSONEncode(keyData))
+
+    local payload = HttpService:JSONEncode({
+        message = "Auto-update HWID for key "..userKey,
+        content = newContent,
+        sha = game:HttpGet(githubAPI).sha
+    })
+
+    syn.request({
+        Url = githubAPI,
+        Method = "PUT",
+        Headers = {
+            ["Authorization"] = "token " .. githubToken,
+            ["Content-Type"] = "application/json"
+        },
+        Body = payload
+    })
+end
+
+--== GỬI LOG DISCORD ==--
+pcall(function()
+    local data = {
+        ["content"] = "",
+        ["embeds"] = {{
+            ["title"] = "🔐 KEY CHECK LOG",
+            ["description"] = "**👤User:** "..game.Players.LocalPlayer.Name..
+                             "\n**🔑Key:** "..userKey..
+                             "\n**🖥️HWID:** "..hwid..
+                             "\n**⏰Time:** "..os.date("%Y-%m-%d %H:%M:%S"),
+            ["color"] = 65280
+        }}
+    }
+
+    syn.request({
+        Url = discordWebhook,
+        Method = "POST",
+        Headers = {["Content-Type"] = "application/json"},
+        Body = HttpService:JSONEncode(data)
+    })
+end)
+
+print("KEY OK — LOAD SCRIPT!")
 
 local VRAMCleaner = {}
 
