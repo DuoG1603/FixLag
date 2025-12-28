@@ -804,7 +804,6 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 -- TỰ ĐỘNG BẬT RESPAWN CLEANUP VÀ ITEM AUTO CLEAN
-VRAMCleaner.enableRespawnCleanup()
 VRAMCleaner.enableItemAutoClean()
 
 return VRAMCleaner
