@@ -53,7 +53,7 @@ function VRAMCleaner.setupRespawnAutoClean()
     
     -- Thiết lập kết nối mới cho respawn - CHẠY LẠI TOÀN BỘ
     VRAMCleaner.respawnConnection = localPlayer.CharacterAdded:Connect(function(character)
-        wait(2) -- Đợi 2 giây để character load hoàn toàn
+        wait(5) -- Đợi 5 giây để character load hoàn toàn
         print("🔄 Player respawned - Running FULL VRAM cleanup...")
         VRAMCleaner.cleanupCompleted = false -- Reset flag để chạy lại toàn bộ
         VRAMCleaner.fullEnvironmentCleanup() -- CHẠY LẠI TOÀN BỘ
@@ -804,6 +804,8 @@ end
 VRAMCleaner.fullEnvironmentCleanup()
 
 -- TỰ ĐỘNG BẬT RESPAWN CLEANUP VÀ ITEM AUTO CLEAN
+VRAMCleaner.enableRespawnCleanup()
 VRAMCleaner.enableItemAutoClean()
 
 return VRAMCleaner
+
